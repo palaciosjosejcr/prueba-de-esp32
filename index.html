@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control IoT - TUVN</title>
+    <!-- Tailwind CSS para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Efecto de brillo para los focos encendidos */
+        .glow-effect {
+            box-shadow: 0 0 25px #fbbf24;
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
+        .btn-press {
+            transition: transform 0.1s;
+        }
+        .btn-press:active {
+            transform: scale(0.95);
+        }
+        /* Animación suave para el logo */
+        .logo-anim:hover {
+            transform: rotate(-5deg) scale(1.1);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Header Personalizado TUVN -->
+    <header class="bg-slate-800 p-4 shadow-lg border-b border-slate-700">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="logo-anim cursor-default select-none">
+                <h1 class="text-2xl font-bold text-blue-400 flex items-center gap-2">
+                    <!-- Icono de birrete académico -->
+                    <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+                    TUVN
+                </h1>
+                <p class="text-xs text-slate-400 font-semibold tracking-wide">Automatización e Instrumentación</p>
+            </div>
+            
+            <div id="connectionStatus" class="flex flex-col items-end gap-1 text-xs font-mono text-red-400">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3">
+                      <span id="pingDot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75 hidden"></span>
+                      <span id="staticDot" class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span>Desconectado</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col items-center justify-start p-6 gap-6 max-w-md mx-auto w-full">
+
+        <!-- Título de la Práctica -->
+        <div class="w-full text-center py-2 border-b border-slate-800">
+            <h2 class="text-xl font-medium text-slate-200">Práctica de control remoto</h2>
+            <p class="text-sm text-slate-500">Laboratorio de IoT</p>
+        </div>
+
+        <!-- NUEVO: Información del Docente y Fecha Automática -->
+        <div class="w-full bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 text-sm space-y-2 shadow-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400 flex items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i> Integrantes:</span>
+                <span class="text-slate-200 font-bold">Palacios</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400 flex items-center gap-2"><i data-lucide="award" class="w-4 h-4"></i> Nivel:</span>
+                <span class="text-slate-200 font-medium">Quinto</span>
+            </div>
+            <div class="h-px bg-slate-700/50 w-full my-1"></div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400 flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> Fecha:</span>
+                <span id="dateDisplay" class="text-emerald-400 font-mono tracking-wider">Cargando...</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-slate-400 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Hora:</span>
+                <span id="timeDisplay" class="text-emerald-400 font-mono tracking-wider">Cargando...</span>
+            </div>
+        </div>
+
+        <!-- Panel de Control Foco 1 -->
+        <div class="w-full bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                <i data-lucide="lightbulb" class="w-24 h-24"></i>
+            </div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">Foco 1</h2>
+                    <p class="text-slate-400 text-sm">Salida GPIO 22</p>
+                </div>
+                <div id="iconFoco1" class="text-slate-600 transition-colors duration-300">
+                    <i data-lucide="lightbulb" class="w-10 h-10 fill-current"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="sendCommand('A')" class="btn-press bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled id="btn1On">
+                    ENCENDER
+                </button>
+                <button onclick="sendCommand('B')" class="btn-press bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled id="btn1Off">
+                    APAGAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel de Control Foco 2 -->
+        <div class="w-full bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                <i data-lucide="lamp" class="w-24 h-24"></i>
+            </div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold">Foco 2</h2>
+                    <p class="text-slate-400 text-sm">Salida GPIO 23</p>
+                </div>
+                <div id="iconFoco2" class="text-slate-600 transition-colors duration-300">
+                    <i data-lucide="lightbulb" class="w-10 h-10 fill-current"></i>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="sendCommand('C')" class="btn-press bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled id="btn2On">
+                    ENCENDER
+                </button>
+                <button onclick="sendCommand('D')" class="btn-press bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold py-3 rounded-xl flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled id="btn2Off">
+                    APAGAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Connection Button Area -->
+        <div class="w-full mt-2">
+            <button id="connectBtn" onclick="toggleConnection()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/50 flex items-center justify-center gap-3 transition-all">
+                <i data-lucide="bluetooth" class="w-5 h-5"></i>
+                <span>Vincular Dispositivo</span>
+            </button>
+            <p class="text-center text-xs text-slate-500 mt-4">
+                Tecnología Superior Universitaria en Automatización e Instrumentación
+            </p>
+        </div>
+
+    </main>
+
+    <script>
+        // Inicializar iconos
+        lucide.createIcons();
+
+        // --- LÓGICA DE FECHA Y HORA AUTOMÁTICA ---
+        function updateDateTime() {
+            const now = new Date();
+            
+            // Opciones para formato de fecha (ej: 28/11/2025)
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            const dateStr = now.toLocaleDateString('es-EC', dateOptions);
+            
+            // Opciones para formato de hora (ej: 14:30:45)
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const timeStr = now.toLocaleTimeString('es-EC', timeOptions);
+
+            document.getElementById('dateDisplay').textContent = dateStr;
+            document.getElementById('timeDisplay').textContent = timeStr;
+        }
+
+        // Actualizar inmediatamente al cargar y luego cada 1000ms (1 segundo)
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+
+        // --- LÓGICA BLUETOOTH ORIGINAL ---
+
+        // Configuración UUIDs (DEBEN COINCIDIR CON EL CÓDIGO ESP32)
+        const serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        const characteristicUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+
+        // Variables de estado
+        let bluetoothDevice;
+        let bleCharacteristic;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const statusText = document.getElementById('connectionStatus');
+        
+        // Elementos UI
+        const buttons = document.querySelectorAll('button[id^="btn"]');
+        const iconFoco1 = document.getElementById('iconFoco1');
+        const iconFoco2 = document.getElementById('iconFoco2');
+
+        async function toggleConnection() {
+            if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        async function connect() {
+            try {
+                updateUIConnecting();
+                
+                console.log('Solicitando dispositivo Bluetooth...');
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'ESP32_Profe_Auto' }],
+                    optionalServices: [serviceUuid]
+                });
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+                console.log('Conectando al servidor GATT...');
+                const server = await bluetoothDevice.gatt.connect();
+
+                console.log('Obteniendo servicio...');
+                const service = await server.getPrimaryService(serviceUuid);
+
+                console.log('Obteniendo característica...');
+                bleCharacteristic = await service.getCharacteristic(characteristicUuid);
+
+                console.log('¡Conectado!');
+                updateUIConnected();
+
+            } catch (error) {
+                console.log('Error: ' + error);
+                updateUIDisconnected();
+                if(error.name !== 'NotFoundError') { // Usuario canceló
+                    alert('Error de conexión: ' + error.message);
+                }
+            }
+        }
+
+        function disconnect() {
+            if (bluetoothDevice) {
+                if (bluetoothDevice.gatt.connected) {
+                    bluetoothDevice.gatt.disconnect();
+                }
+            }
+        }
+
+        function onDisconnected(event) {
+            console.log('Dispositivo desconectado');
+            updateUIDisconnected();
+        }
+
+        async function sendCommand(cmd) {
+            if (!bleCharacteristic) return;
+
+            try {
+                const encoder = new TextEncoder();
+                await bleCharacteristic.writeValue(encoder.encode(cmd));
+                console.log('Comando enviado:', cmd);
+                
+                // Feedback visual en la App
+                updateIconState(cmd);
+            } catch (error) {
+                console.log('Error al escribir: ' + error);
+            }
+        }
+
+        // --- Funciones de UI ---
+
+        function updateIconState(cmd) {
+            if (cmd === 'A') {
+                iconFoco1.classList.add('text-amber-400', 'glow-effect');
+                iconFoco1.classList.remove('text-slate-600');
+            } else if (cmd === 'B') {
+                iconFoco1.classList.remove('text-amber-400', 'glow-effect');
+                iconFoco1.classList.add('text-slate-600');
+            } else if (cmd === 'C') {
+                iconFoco2.classList.add('text-amber-400', 'glow-effect');
+                iconFoco2.classList.remove('text-slate-600');
+            } else if (cmd === 'D') {
+                iconFoco2.classList.remove('text-amber-400', 'glow-effect');
+                iconFoco2.classList.add('text-slate-600');
+            }
+        }
+
+        function updateUIConnecting() {
+            connectBtn.innerHTML = '<span class="animate-spin">⌛</span> Vinculando...';
+            connectBtn.classList.add('opacity-75');
+        }
+
+        function updateUIConnected() {
+            connectBtn.innerHTML = 'DESCONECTAR';
+            connectBtn.classList.replace('bg-blue-600', 'bg-red-600');
+            connectBtn.classList.replace('hover:bg-blue-500', 'hover:bg-red-500');
+            connectBtn.classList.replace('shadow-blue-900/50', 'shadow-red-900/50');
+            
+            // Actualizar status header
+            const statusContainer = document.getElementById('connectionStatus');
+            statusContainer.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-emerald-400 font-bold">Conectado</span>
+                </div>`;
+            
+            buttons.forEach(btn => btn.disabled = false);
+        }
+
+        function updateUIDisconnected() {
+            connectBtn.innerHTML = '<i data-lucide="bluetooth" class="w-5 h-5"></i> Vincular Dispositivo';
+            lucide.createIcons(); // Re-render icon
+            connectBtn.classList.replace('bg-red-600', 'bg-blue-600');
+            connectBtn.classList.replace('hover:bg-red-500', 'hover:bg-blue-500');
+            connectBtn.classList.replace('shadow-red-900/50', 'shadow-blue-900/50');
+            connectBtn.classList.remove('opacity-75');
+
+            const statusContainer = document.getElementById('connectionStatus');
+            statusContainer.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-3 w-3">
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    <span>Desconectado</span>
+                </div>`;
+
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Reset icons
+            iconFoco1.classList.remove('text-amber-400', 'glow-effect');
+            iconFoco1.classList.add('text-slate-600');
+            iconFoco2.classList.remove('text-amber-400', 'glow-effect');
+            iconFoco2.classList.add('text-slate-600');
+        }
+    </script>
+</body>
+</html>
